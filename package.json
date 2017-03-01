@@ -1,6 +1,6 @@
 {
   "name": "pico-engine",
-  "version": "0.5.4",
+  "version": "0.5.3",
   "description": "An implementation of the pico-engine targetting node.js",
   "main": "src/index.js",
   "bin": {
@@ -13,11 +13,11 @@
     "src"
   ],
   "scripts": {
-    "start": "scriptsp watch:http watch:test ",
+    "start": "scriptsp watch:http watch:test",
     "watch:http": "onchange -i src/ public/ -- node src/index.js",
     "watch:test": "onchange -i src/ -- npm run test -s",
     "lint": "eslint src/ && echo lint-ok",
-    "test": "npm run lint && node src/tests.js && open \"http://$([ $PICO_ENGINE_HOME] && PICO_ENGINE_HOME || echo localhost ):$([ $PORT ] &&  $PORT || echo 8080)\" && echo \"pico-engine at http://$([ $PICO_ENGINE_HOME] && PICO_ENGINE_HOME || echo localhost ):$([ $PORT ] &&  $PORT || echo 8080)\""
+    "test": "npm run lint && node src/tests.js"
   },
   "repository": {
     "type": "git",
@@ -39,7 +39,8 @@
     "eslint": "^3.0.1",
     "onchange": "^3.0.0",
     "scriptsp": "^0.3.0",
-    "tape": "^4.5.1"
+    "tape": "^4.5.1",
+    "opn":"^4.0.2"
   },
   "dependencies": {
     "body-parser": "^1.15.2",

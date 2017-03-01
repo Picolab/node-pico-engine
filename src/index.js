@@ -9,6 +9,7 @@ var bodyParser = require("body-parser");
 var PicoEngine = require("pico-engine-core");
 var RulesetLoader = require("./RulesetLoader");
 var compiler = require("krl-compiler");
+var open = require("opn");
 
 ////////////////////////////////////////////////////////////////////////////////
 var port = process.env.PORT || 8080;
@@ -349,6 +350,7 @@ startPicoEngine(function(err, pe){
     });
 
     app.listen(port, function () {
-        console.log("http://localhost:" + port);
+        console.log("pico-engine at http://localhost:" + port);
+        open("http://localhost:"+port);
     });
 });
