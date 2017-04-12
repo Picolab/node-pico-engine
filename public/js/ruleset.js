@@ -87,9 +87,12 @@ $.getJSON("/api/db-dump", function(db_dump){
   if (db_dump.rulesets && db_dump.rulesets.versions) {
     for(var aRid in db_dump.rulesets.versions) {
       rs_data.rulesets[aRid] = {};
-      if (get(db_dump.rulesets,["enabled",aRid],undefined)) {
+      rs_info = get(db_dump.rulesets,["enabled",aRid],undefined);
+      if (rs_info) {
         rs_data.rulesets[aRid].enabled = true;
-      }
+        if (get(db_dump.rulesets,["krl",rs_info.hash,"url"],undefined)) {
+          rs_data.rulesets[aRid].hasURL = true;
+        }
     }
   }
   var ridRE = /^[a-zA-Z][a-zA-Z0-9_.-]*$/;
@@ -125,6 +128,17 @@ $.getJSON("/api/db-dump", function(db_dump){
     } else {
       alert("invalid ruleset id");
     }
+  });
+  $(".flush").click(function(e){
+    e.preventDefault();
+    picoAPI($(this).attr("href"),undefined,"GET",function(err, data){
+      if(err){
+        $("pre#feedback").html("<span style=\"color:red\">" + err + "</span>");
+        return;
+      }
+      location.hash = data.rid;
+      location.reload();
+    });
   });
   $("form.registerFromURL").submit(function(e){
     e.preventDefault();
