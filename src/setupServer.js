@@ -259,5 +259,13 @@ module.exports = function(pe){
         });
     });
 
+    app.all("/api/ruleset/unregister/:rid", function(req, res){
+        var rid = req.params.rid;
+        pe.db.getEnabledRuleset(rid, function(err, rs_data){
+            if(err) return errResp(res, err);
+            res.json({ok: true});
+        });
+    });
+
     return app;
 };
