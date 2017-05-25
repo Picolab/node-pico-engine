@@ -105,24 +105,21 @@ ruleset Subscriptions {
       (subscriptions{name_space + ":" + name}.isnull())
     }
   }
-  rule skyEvent{ // can't be a defaction because we want to simulate an asynchronous http post
+  rule skyEvent{ // until event:send accepts a host, this can't be an asynchronous defaction
     select when wrangler skyEvent
-    pre{_=event:attrs().klog("skyEvent attrs")
-      host = event:attr("host")
-      eci = event:attr("eci")
-      eid = event:attr("eid")
-      domain = event:attr("domain")
-      type = event:attr("type")
-      attrs = event:attr("attrs")}
-    if host.isnull() then event:send({"eci":eci, "eid":eid, "domain":domain, "type":type, "attrs":attrs})
-    notfired{ // can't do another conditional 'event:send' directly
-      raise wrangler event "skyEventBeginHTTP" attributes event:attrs()}}
-  rule skyEventBeginHTTP{ // can't `http:post` directly because it's not asynchronous like `event:send` (which doesn't accept a host yet)
-    select when wrangler skyEventBeginHTTP
-    event:send({"eci":meta:eci, "eid":"skyEventHTTP", "domain":"wrangler", "type":"skyEventDoHTTP", "attrs":event:attrs()})}
-  rule skyEventDoHTTP{
-    select when wrangler skyEventDoHTTP
-    http:post(event:attr("host")+"/sky/event/"+event:attr("eci")+"/"+event:attr("eid")+"/"+event:attr("domain")+"/"+event:attr("type")) with qs=event:attr("attrs")}
+    pre{
+      h = event:attr("host") // http[s]:<address>[:<port>]   (if included; '[x]' means x is optional)
+      c = event:attr("eci")
+      i = event:attr("eid")
+      d = event:attr("domain")
+      t = event:attr("type")
+      a = event:attr("attrs")
+      s = event:attrs().klog("skyEvent attrs")}
+    event:send(h.isnull() => {"eci":c, "eid":i, "domain":d, "type":t, "attrs":a} |
+      {"eci":meta:eci, "eid":"skyEventHTTP", "domain":"wrangler", "type":"skyEventHTTP", "attrs":s})}
+  rule skyEventHTTP{
+    select when wrangler skyEventHTTP host re#.*# eci re#.*# eid re#.*# attrs re#.*# setting(h,c,i,a)
+    http:post(h+"/sky/event/"+c+"/"+i+"/"+event:attr("domain")+"/"+event:attr("type")) with qs=a}
   rule subscribeNameCheck {
     select when wrangler subscription
     pre {
