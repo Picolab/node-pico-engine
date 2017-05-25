@@ -6,8 +6,8 @@ ruleset Subscriptions {
     >>
     author "CS462 TA"
     use module io.picolabs.pico alias wrangler
-    provides getSubscriptions, createSubscriptionChannel , klogtesting, skyQuery
-    shares getSubscriptions, createSubscriptionChannel , klogtesting, skyQuery
+    provides getSubscriptions, klogtesting, skyQuery
+    shares getSubscriptions, klogtesting, skyQuery
     logging on
   }
 
@@ -72,31 +72,6 @@ ruleset Subscriptions {
     getSelf = function(){
        wrangler:myself() // must be wrapped in a function
     }
-    createSubscriptionChannel = function(options){
-      //subsID = null.uuid();
-      logs = options.klog("parameters ");
-      self = getSelf().klog("self");
-      id = self.id;
-      channel = engine:newChannel(
-        { "name": options.name, "type": options.eci_type, "pico_id": id }).klog("newchannel");
-      eci = channel.id;
-      {"eci": eci, "name": options.name,"type": options.eci_type, "attributes": options.attributes }
-    }
-/*
-    createSubscriptionChannel = defaction(options){
-      logs = options.klog("parameters ")
-      self = getSelf().klog("self")
-      id = self.id
-      channel = engine:newChannel(
-        { "name": options.name, "type": options.eci_type, "pico_id": id }).klog("newchannel")
-      eci = channel.id
-      newSubscription = {"eci": eci, "name": options.name,"type": options.eci_type, "attributes": options.attributes }
-      null = ent:subscriptions.pset(getSubscriptions().put([newSubscription.name] , newSubscription.put(["attributes"],{"sid" : newSubscription.name})))
-      send_directive("subscription created") with
-        subscription = newSubscription
-
-    }
-    */
     getSubscriptions = function(){
       ent:subscriptions.defaultsTo({},"no subscriptions")
     }
@@ -207,25 +182,14 @@ ruleset Subscriptions {
           "attributes" : pending_entry_prime
           //"policy" : ,
       }.klog("options")
-      newSubscription = (subscriber_eci != "no_subscriber_eci").klog("True?") => createSubscriptionChannel(options) | {}
-      pending = {
-        "status" : pending_entry{"status"},
-        "channel_name" : unique_name,
-        "channel_type" : channel_type,
-        "name" : pending_entry{"subscription_name"},
-        "name_space" : pending_entry{"name_space"},
-        "relationship" : pending_entry{"relationship"},
-        "my_role" : pending_entry{"my_role"},
-        "subscriber_role" : pending_entry{"subscriber_role"},
-        "subscriber_eci" : pending_entry{"subscriber_eci"},
-        "inbound_eci" : newSubscription.eci,
-        "attributes" : pending_entry{"attributes"}
-      }
-    updatedSubs = getSubscriptions().put([newSubscription.name] , newSubscription.put(["attributes"],{"sid" : newSubscription.name})) 
     }
     if(subscriber_eci != "no_subscriber_eci") // check if we have someone to send a request too
-    then noop()
+    then {
+       engine:newChannel(getSelf()["id"], options.name, options.eci_type) setting(channel);
+    }
     fired {
+      newSubscription = {"eci": channel.id, "name": channel.name,"type": channel.type, "attributes": options.attributes};
+      updatedSubs = getSubscriptions().put([newSubscription.name] , newSubscription.put(["attributes"],{"sid" : newSubscription.name})) ;
       newSubscription.klog(">> successful created subscription request >>");
       ent:subscriptions := updatedSubs;
       raise wrangler event "pending_subscription"
@@ -346,12 +310,13 @@ ruleset Subscriptions {
           pending_subscriptions.put("subscriber_host", subscriber_host))
           //"policy" : ,
       }
-      newSubscription = ((checkSubscriptionName(unique_name)) => createSubscriptionChannel(options) | {} )
     }
-    if(true) 
-    then
-      noop()
+    if checkSubscriptionName(unique_name)
+    then {
+       engine:newChannel(getSelf()["id"], options.name, options.eci_type) setting(channel);
+    }
     fired { 
+      newSubscription = {"eci": channel.id, "name": channel.name,"type": channel.type, "attributes": options.attributes};
       logs.klog(standardOut("successful pending incoming"));
       ent:subscriptions := getSubscriptions().put( [newSubscription.name] , newSubscription.put(["attributes"],{"sid":newSubscription.name}) );
       raise wrangler event "inbound_pending_subscription_added" // event to nothing
@@ -481,14 +446,10 @@ rule addInboundSubscription {
       eci = subs{[channel_name,"eci"]}.klog("subscription inbound")
       updatedSubscription = subs.delete(channel_name).klog("delete")
     }
-    if(true) then noop()
+    engine:removeChannel(subscription{"eci"}.klog("eci to be removed"))
     always {
       ent:subscriptions := updatedSubscription;
       self = getSelf();
-      engine:removeChannel({
-        "pico_id": self.id,
-        "eci": subscription{"eci"}.klog("eci to be removed")
-      });
       subscription.klog(standardOut("success, attemped to remove subscription"));
       raise wrangler event "subscription_removed" // event to nothing
         with removed_subscription = subscription
