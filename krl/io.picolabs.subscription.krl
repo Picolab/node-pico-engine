@@ -250,8 +250,8 @@ ruleset Subscriptions {
     fired{
         logs.klog(">> could not accept request #{name} >>");
         event:send({ "eci": event:attr("outbound_eci"), "eid": "pending_subscription",
-          "domain": "wrangler", "type": "outbound_subscription_cancellation",
-          "attrs": event:attrs().put({"failed_request":"not a unique subscription"})})
+          "domain": "wrangler", "type": "subscription_cancellation",
+          "attrs": {"subscription_name": event:attr("channel_name")})})
     }
     else{
       logs.klog(">> unique name suggested request #{name} pending >>");
@@ -306,7 +306,7 @@ rule approveInboundPendingSubscription {
     select when wrangler pending_subscription_approval
     pre{
       logs = event:attrs().klog("attrs")
-      channel_name = event:attr("subscription_name").defaultsTo(event:attr("channel_name"), "channel_name used ")
+      channel_name = event:attr("subscription_name")
       subs = getSubscriptions().klog("subscriptions")
       inbound_eci = subs{[channel_name,"eci"]}.klog("subscription inbound")
       outbound_eci = subs{[channel_name,"attributes","outbound_eci"]}.klog("subscriptions outbound")
@@ -382,10 +382,8 @@ rule addInboundSubscription {
 
   rule cancelSubscription {
     select when wrangler subscription_cancellation
-            or  wrangler inbound_subscription_rejection
-            or  wrangler outbound_subscription_cancellation
     pre{
-      channel_name = event:attr("subscription_name").defaultsTo(event:attr("channel_name"), "channel_name used ") //.defaultsTo( "No channel_name", standardError("channel_name"))
+      channel_name = event:attr("subscription_name")
       subs = getSubscriptions()
       outbound_eci = subs{[channel_name,"attributes","outbound_eci"]}.klog("outboundEci")
     }
