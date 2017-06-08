@@ -134,7 +134,11 @@ var setupLogging = function(pe){
         if(shell_log.length > 300){
             shell_log = shell_log.substring(0, 300) + "...";
         }
-        console.log(shell_log);
+        if(/error/i.test(level)){
+            console.log(shell_log);//use stderr
+        }else{
+            console.log(shell_log);
+        }
 
         var episode = logs[episode_id];
         if (episode) {
