@@ -251,7 +251,7 @@ ruleset Subscriptions {
         logs.klog(">> could not accept request #{name} >>");
         event:send({ "eci": event:attr("outbound_eci"), "eid": "pending_subscription",
           "domain": "wrangler", "type": "subscription_cancellation",
-          "attrs": {"subscription_name": event:attr("channel_name")})})
+          "attrs": {"subscription_name": event:attr("channel_name")}})
     }
     else{
       logs.klog(">> unique name suggested request #{name} pending >>");
