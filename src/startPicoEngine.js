@@ -101,7 +101,11 @@ var registerBuiltInRulesets = function(pe, callback){
 var setupLogging = function(pe){
 
     var toKRLjson = function(val, indent){
-        return krl_stdlib.encode({}, val, indent);
+        var message = krl_stdlib.encode({}, val, indent);
+        if(message==="\"[JSObject]\""){
+            message = val.toString();
+        }
+        return message;
     };
 
     var logs = {};
