@@ -1,5 +1,7 @@
 # pico-engine
 
+MOVED TO https://github.com/Picolab/pico-engine/tree/master/packages/pico-engine
+
 [![build status](https://secure.travis-ci.org/Picolab/node-pico-engine.svg)](https://travis-ci.org/Picolab/node-pico-engine)
 [![windows build status](https://ci.appveyor.com/api/projects/status/nmhdhtqa1n83aqc1?svg=true)](https://ci.appveyor.com/project/farskipper/node-pico-engine)
 
